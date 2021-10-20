@@ -301,7 +301,7 @@ Prefer a topic over a branch and that over a commit."
 ;;;###autoload
 (defun forge-browse-pullreq (pullreq)
   "Visit the url corresponding to PULLREQ using a browser."
-  (interactive (list (forge-read-pullreq "Browse pull-request" t)))
+  (interactive (list (forge-read-pullreq "Browse pull-request")))
   (forge-browse (forge-get-pullreq pullreq)))
 
 ;;;###autoload
@@ -316,7 +316,7 @@ Prefer a topic over a branch and that over a commit."
   "Visit the current issue using a browser.
 If there is no current issue or with a prefix argument
 read an ISSUE to visit."
-  (interactive (list (forge-read-issue "Browse issue" t)))
+  (interactive (list (forge-read-issue "Browse issue")))
   (forge-browse (forge-get-issue issue)))
 
 ;;;###autoload
@@ -344,7 +344,7 @@ read a topic to visit instead."
   "View the current pull-request in a separate buffer.
 If there is no current pull-request or with a prefix argument
 read a PULLREQ to visit instead."
-  (interactive (list (forge-read-pullreq "View pull-request" t)))
+  (interactive (list (forge-read-pullreq "View pull-request")))
   (forge-visit (forge-get-pullreq pullreq)))
 
 ;;;###autoload
@@ -352,7 +352,7 @@ read a PULLREQ to visit instead."
   "Visit the current issue in a separate buffer.
 If there is no current issue or with a prefix argument
 read an ISSUE to visit instead."
-  (interactive (list (forge-read-issue "View issue" t)))
+  (interactive (list (forge-read-issue "View issue")))
   (forge-visit (forge-get-issue issue)))
 
 ;;;###autoload
@@ -628,8 +628,10 @@ TOPIC and modify that instead."
 ;;;###autoload
 (defun forge-branch-pullreq (pullreq)
   "Create and configure a new branch from a pull-request.
+Use a prefix argument to be able to select a closed pull-request.
 Please see the manual for more information."
-  (interactive (list (forge-read-pullreq "Branch pull request" t)))
+  (interactive (list (forge-read-pullreq "Branch pull request"
+                                         (if current-prefix-arg nil 'open))))
   (let ((pullreq (forge-get-pullreq pullreq)))
     (if-let ((branch (forge--pullreq-branch-active pullreq)))
         (progn (message "Branch %S already exists and is configured" branch)
@@ -730,7 +732,7 @@ because the source branch has been deleted"))
 (defun forge-checkout-pullreq (pullreq)
   "Create, configure and checkout a new branch from a pull-request.
 Please see the manual for more information."
-  (interactive (list (forge-read-pullreq "Checkout pull request" t)))
+  (interactive (list (forge-read-pullreq "Checkout pull request")))
   (let ((pullreq (forge-get-pullreq pullreq)))
     (magit-checkout
      (or (if (not (eq (oref pullreq state) 'open))
@@ -747,7 +749,7 @@ This is like `forge-checkout-pullreq', except that it also
 creates a new worktree. Please see the manual for more
 information."
   (interactive
-   (let ((id (forge-read-pullreq "Checkout pull request" t)))
+   (let ((id (forge-read-pullreq "Checkout pull request")))
      (list (funcall forge-checkout-worktree-read-directory-function
                     (forge-get-pullreq id))
            id)))
@@ -978,10 +980,7 @@ This may take a while.  Only Github is supported at the moment."
 
 ;;;###autoload
 (defun forge-merge (pullreq method)
-  "Merge the current pull-request using METHOD using the forge's API.
-
-If there is no current pull-request or with a prefix argument,
-then read pull-request PULLREQ to visit instead.
+  "Merge an open pull-request PULLREQ using METHOD using the forge's API.
 
 Use of this command is discouraged.  Unless the remote repository
 is configured to disallow that, you should instead merge locally
@@ -989,7 +988,7 @@ and then push the target branch.  Forges detect that you have
 done that and respond by automatically marking the pull-request
 as merged."
   (interactive
-   (list (forge-read-pullreq "Merge pull-request" t)
+   (list (forge-read-pullreq "Merge pull-request" 'open)
          (if (forge--childp (forge-get-repository t) 'forge-gitlab-repository)
              (magit-read-char-case "Merge method " t
                (?m "[m]erge"  'merge)
